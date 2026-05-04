@@ -1,0 +1,716 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Control 26.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:'DM Sans',sans-serif;
+  font-weight:300;
+  background:#f4f0e8;
+  color:#18160f;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(24,22,15,.2);border-radius:2px}
+
+/* ── TOKENS ── */
+:root{
+  --ink:#18160f;
+  --ink50:rgba(24,22,15,.5);
+  --ink25:rgba(24,22,15,.25);
+  --ink10:rgba(24,22,15,.10);
+  --cream:#f4f0e8;
+  --white:#fdfcf9;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ── LOADER ── */
+#loader{
+  position:fixed;inset:0;z-index:999;
+  background:#18160f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  transition:opacity .65s ease,visibility .65s;
+}
+#loader.out{opacity:0;visibility:hidden;pointer-events:none}
+.ld-title{
+  font-family:var(--serif);font-style:italic;
+  font-size:clamp(30px,5vw,56px);color:#f4f0e8;
+  letter-spacing:-.02em;
+  animation:fadeUp .8s var(--ease) .1s both;
+}
+.ld-sub{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(244,240,232,.38);
+  animation:fadeUp .6s var(--ease) .3s both;
+}
+.ld-track{
+  width:140px;height:1px;background:rgba(255,255,255,.12);overflow:hidden;
+  animation:fadeUp .5s var(--ease) .5s both;
+}
+.ld-fill{height:100%;background:#f4f0e8;animation:fillBar 1.1s var(--ease) .55s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fillBar{from{width:0}to{width:100%}}
+
+/* ── NAV ── */
+.nav{
+  position:sticky;top:0;z-index:50;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 64px;
+  background:rgba(244,240,232,.94);
+  border-bottom:1px solid var(--ink10);
+  backdrop-filter:blur(16px) saturate(1.4);
+}
+.nav-brand{
+  font-family:var(--serif);font-size:15px;
+  color:var(--ink);text-decoration:none;
+  letter-spacing:.01em;
+}
+.nav-menu{display:flex;gap:36px;list-style:none}
+.nav-menu a{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink25);text-decoration:none;
+  transition:color .2s;
+  position:relative;padding-bottom:2px;
+}
+.nav-menu a::after{
+  content:'';position:absolute;bottom:0;left:0;
+  width:0;height:1px;background:var(--ink);
+  transition:width .3s var(--ease);
+}
+.nav-menu a:hover{color:var(--ink)}
+.nav-menu a:hover::after{width:100%}
+
+/* ── HERO ── */
+.hero{
+  min-height:100svh;
+  padding:80px 64px 100px;
+  display:grid;
+  grid-template-columns:1fr 420px;
+  gap:64px;
+  align-items:end;
+  border-bottom:1px solid var(--ink10);
+  position:relative;overflow:hidden;
+}
+.hero-wm{
+  position:absolute;right:-.04em;bottom:-.1em;
+  font-family:var(--serif);font-style:italic;
+  font-size:clamp(160px,22vw,320px);
+  line-height:1;color:rgba(24,22,15,.04);
+  pointer-events:none;user-select:none;
+  letter-spacing:-.04em;
+}
+.hero-left{display:flex;flex-direction:column;gap:36px;position:relative;z-index:1}
+.hero-kicker{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink25);
+  display:flex;align-items:center;gap:14px;
+}
+.hero-kicker::before{content:'';display:block;width:28px;height:1px;background:var(--ink25)}
+.hero-h1{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(52px,7vw,100px);
+  line-height:.92;letter-spacing:-.025em;
+}
+.hero-h1 em{font-style:italic;color:var(--ink50)}
+.hero-h1 strong{font-weight:700}
+
+.hero-right{display:flex;flex-direction:column;justify-content:flex-end;gap:4px;position:relative;z-index:1}
+.hero-right-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink25);margin-bottom:16px}
+
+/* Theme index */
+.tidx{display:flex;flex-direction:column}
+.tidx a{
+  display:grid;grid-template-columns:28px 26px 1fr 20px;
+  align-items:center;gap:14px;
+  padding:20px 0;
+  border-top:1px solid var(--ink10);
+  text-decoration:none;color:var(--ink);
+  position:relative;overflow:hidden;
+  transition:padding-left .3s var(--ease);
+}
+.tidx a:last-child{border-bottom:1px solid var(--ink10)}
+.tidx a::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(24,22,15,.03);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s var(--ease);
+}
+.tidx a:hover{padding-left:12px}
+.tidx a:hover::before{transform:scaleX(1)}
+.ti-num{font-size:10px;color:var(--ink25);letter-spacing:.1em;position:relative}
+.ti-icon{font-size:18px;position:relative;transition:transform .3s var(--ease)}
+.tidx a:hover .ti-icon{transform:scale(1.15) rotate(-5deg)}
+.ti-name{font-family:var(--serif);font-size:19px;letter-spacing:-.01em;position:relative}
+.ti-arr{color:var(--ink25);font-size:14px;position:relative;transition:transform .3s var(--ease),color .2s}
+.tidx a:hover .ti-arr{transform:translateX(4px);color:var(--ink)}
+
+/* ── THEME SECTIONS ──
+   The key: use a proper 2-col grid on the wrapper,
+   sidebar and content are siblings in the SAME grid row.
+   No position:sticky on sidebar — use position:sticky on .sb-inner
+   but clip it inside the sidebar column so it never bleeds. ── */
+.theme{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  border-bottom:1px solid var(--ink10);
+  /* Each column is self-contained — no overlap possible */
+}
+
+/* Sidebar column */
+.sb{
+  /* Just a column container — no positioning tricks */
+  border-right:1px solid var(--ink10);
+}
+.sb-inner{
+  /* This is what sticks, but only within the sidebar column */
+  position:sticky;
+  top:58px; /* nav height */
+  max-height:calc(100svh - 58px);
+  overflow-y:auto;
+  padding:56px 40px;
+  display:flex;flex-direction:column;gap:32px;
+}
+.sb-inner::-webkit-scrollbar{width:0}
+
+.sb-num{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink25)}
+.sb-icon{font-size:34px;line-height:1;display:block;margin:16px 0 12px}
+.sb-title{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(26px,2.2vw,38px);
+  line-height:1.0;letter-spacing:-.02em;
+}
+.sb-title em{font-style:italic;display:block;color:var(--ink50);font-size:.86em}
+.sb-divider{height:1px;background:rgba(24,22,15,.12);flex-shrink:0}
+.sb-desc{font-size:13px;color:var(--ink50);line-height:1.8}
+.sb-stickers{display:flex;flex-wrap:wrap;gap:7px}
+.sticker{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:100px;
+  border:1.5px solid;
+  font-size:12.5px;font-weight:400;
+  background:rgba(255,255,255,.6);
+  white-space:nowrap;
+  transition:background .2s,transform .2s var(--ease);
+}
+.sticker:hover{background:rgba(255,255,255,.95);transform:translateY(-2px)}
+.audio-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:9px 16px;border-radius:100px;
+  border:1.5px solid;
+  font-size:12.5px;font-weight:400;
+  font-family:'DM Sans',sans-serif;
+  background:rgba(255,255,255,.6);
+  cursor:pointer;
+  transition:background .2s,transform .2s var(--ease),box-shadow .2s;
+  width:100%;justify-content:center;
+}
+.audio-btn:hover{background:rgba(255,255,255,.95);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.ab-bars{display:none;align-items:center;gap:2px;height:14px}
+.audio-btn.playing .ab-bars{display:flex}
+.ab-bars span{display:block;width:3px;border-radius:2px;background:currentColor}
+.audio-btn.playing .ab-bars span:nth-child(1){animation:bar 1s ease-in-out infinite}
+.audio-btn.playing .ab-bars span:nth-child(2){animation:bar 1s ease-in-out .18s infinite}
+.audio-btn.playing .ab-bars span:nth-child(3){animation:bar 1s ease-in-out .36s infinite}
+.audio-btn.playing .ab-bars span:nth-child(4){animation:bar 1s ease-in-out .54s infinite}
+@keyframes bar{0%,100%{height:4px}50%{height:14px}}
+
+/* Content column */
+.ct{
+  padding:56px 64px 72px;
+  /* min-width:0 prevents grid blowout */
+  min-width:0;
+}
+
+/* Section heading */
+.sh{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;font-weight:500;
+  padding-bottom:20px;margin-bottom:0;margin-top:56px;
+  border-bottom:1px solid var(--ink10);
+  display:flex;align-items:center;gap:14px;
+}
+.sh:first-child{margin-top:0}
+.sh-line{
+  flex:1;height:1px;background:var(--ink10);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .8s var(--ease);
+}
+.sh.vis .sh-line{transform:scaleX(1)}
+
+/* Phrase rows */
+.phrase-row{
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:40px;
+  padding:28px 0;
+  border-bottom:1px solid var(--ink10);
+  align-items:baseline;
+}
+.phrase-tag{
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:500;padding-top:5px;
+}
+.phrase-q{
+  font-family:var(--serif);font-size:21px;
+  font-weight:400;line-height:1.55;color:var(--ink);
+}
+.phrase-note{font-size:12px;color:var(--ink25);margin-top:8px;line-height:1.5}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.card{
+  background:var(--white);border:1.5px solid var(--ink10);
+  border-radius:6px;padding:22px;
+  transition:border-color .2s,transform .25s var(--ease),box-shadow .25s;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.07)}
+.card-tag{font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;margin-bottom:12px}
+.card-text{font-family:var(--serif);font-style:italic;font-size:14.5px;line-height:1.6}
+
+/* Idioms */
+.idioms{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:24px}
+.idiom{
+  background:var(--white);border:1.5px solid var(--ink10);
+  border-radius:6px;padding:16px 20px;
+  display:flex;flex-direction:column;gap:5px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s var(--ease);
+}
+.idiom::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  transform:scaleY(0);transform-origin:bottom;
+  transition:transform .25s var(--ease);
+}
+.idiom:hover{transform:translateX(3px)}
+.idiom:hover::before{transform:scaleY(1)}
+.idiom-phrase{font-family:var(--serif);font-style:italic;font-size:16.5px;line-height:1.25}
+.idiom-use{font-size:12px;color:var(--ink50)}
+
+/* Visuals */
+.visuals{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:24px}
+.visual{
+  background:var(--white);border:1.5px solid var(--ink10);
+  border-radius:6px;padding:20px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:border-color .2s,transform .25s var(--ease),box-shadow .25s;
+}
+.visual:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.visual-icon{font-size:24px;line-height:1;transition:transform .25s var(--ease)}
+.visual:hover .visual-icon{transform:scale(1.12)}
+.visual-name{font-size:13px;font-weight:400}
+.visual-hint{font-size:12px;color:var(--ink50);line-height:1.5}
+
+/* ── COLOR THEMES ── */
+.esc  {--a:#6b4e18;--am:#c9961a;--abg:#faf4e4;--abd:rgba(107,78,24,.2)}
+.vysh {--a:#1a4d34;--am:#2d8a5a;--abg:#e8f4ed;--abd:rgba(26,77,52,.2)}
+.spc  {--a:#192b58;--am:#3259b0;--abg:#e8edf8;--abd:rgba(25,43,88,.2)}
+
+.esc  .sb{background:#faf4e4}
+.vysh .sb{background:#e8f4ed}
+.spc  .sb{background:#e8edf8}
+
+.esc  .sb-title  {color:#6b4e18}
+.vysh .sb-title  {color:#1a4d34}
+.spc  .sb-title  {color:#192b58}
+
+.esc  .sticker,.esc  .audio-btn{border-color:rgba(107,78,24,.22);color:#6b4e18}
+.vysh .sticker,.vysh .audio-btn{border-color:rgba(26,77,52,.22); color:#1a4d34}
+.spc  .sticker,.spc  .audio-btn{border-color:rgba(25,43,88,.22); color:#192b58}
+
+.esc  .sh,.esc  .phrase-tag,.esc  .card-tag{color:#6b4e18}
+.vysh .sh,.vysh .phrase-tag,.vysh .card-tag{color:#1a4d34}
+.spc  .sh,.spc  .phrase-tag,.spc  .card-tag{color:#192b58}
+
+.esc  .idiom::before{background:#c9961a}
+.vysh .idiom::before{background:#2d8a5a}
+.spc  .idiom::before{background:#3259b0}
+
+.esc  .card:hover,.esc  .idiom:hover,.esc  .visual:hover{border-color:#c9961a}
+.vysh .card:hover,.vysh .idiom:hover,.vysh .visual:hover{border-color:#2d8a5a}
+.spc  .card:hover,.spc  .idiom:hover,.spc  .visual:hover{border-color:#3259b0}
+
+/* ── FOOTER ── */
+footer{
+  padding:44px 64px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--ink10);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink25);
+}
+footer em{font-family:var(--serif);font-style:italic;text-transform:none;letter-spacing:0;font-size:13px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1000px){
+  .hero{grid-template-columns:1fr;padding:64px 32px 80px}
+  .hero-right{border-top:1px solid var(--ink10);padding-top:40px}
+  .theme{grid-template-columns:1fr}
+  .sb{border-right:none;border-bottom:1px solid var(--ink10)}
+  .sb-inner{position:static;max-height:none;padding:40px 32px}
+  .ct{padding:40px 32px 56px}
+  .cards{grid-template-columns:1fr 1fr}
+  .visuals{grid-template-columns:1fr 1fr}
+  .nav{padding:0 32px}
+  footer{padding:36px 32px;flex-direction:column;gap:8px;text-align:center}
+}
+@media(max-width:600px){
+  .hero{padding:56px 20px 64px}
+  .sb-inner,.ct{padding-left:20px;padding-right:20px}
+  .nav{padding:0 20px}
+  .nav-menu{display:none}
+  .phrase-row{grid-template-columns:1fr;gap:10px}
+  .cards{grid-template-columns:1fr}
+  .idioms{grid-template-columns:1fr}
+  .visuals{grid-template-columns:1fr}
+  footer{padding:28px 20px}
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <p class="ld-title">Mission Control 26.2</p>
+  <p class="ld-sub">Technology UA People Team</p>
+  <div class="ld-track"><div class="ld-fill"></div></div>
+</div>
+
+<nav class="nav">
+  <a href="#top" class="nav-brand">Mission Control 26.2</a>
+  <ul class="nav-menu">
+    <li><a href="#esc">Eurovision</a></li>
+    <li><a href="#vysh">Vyshyvanka Day</a></li>
+    <li><a href="#space">Mission Moon</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-left">
+    <p class="hero-kicker">Three themes · Choose one</p>
+    <h1 class="hero-h1">Mission<br><em>Control</em><br><strong>26.2</strong></h1>
+  </div>
+  <div class="hero-right">
+    <p class="hero-right-label">Technology UA People Team · Q2 2025</p>
+    <nav class="tidx">
+      <a href="#esc">
+        <span class="ti-num">01</span><span class="ti-icon">🎤</span>
+        <span class="ti-name" style="color:#6b4e18">Eurovision</span>
+        <span class="ti-arr">→</span>
+      </a>
+      <a href="#vysh">
+        <span class="ti-num">02</span><span class="ti-icon">🌻</span>
+        <span class="ti-name" style="color:#1a4d34">Vyshyvanka Day</span>
+        <span class="ti-arr">→</span>
+      </a>
+      <a href="#space">
+        <span class="ti-num">03</span><span class="ti-icon">🚀</span>
+        <span class="ti-name" style="color:#192b58">Mission Moon</span>
+        <span class="ti-arr">→</span>
+      </a>
+    </nav>
+  </div>
+  <div class="hero-wm" aria-hidden="true">26.2</div>
+</section>
+
+
+<!-- ════════════════ 01 EUROVISION ════════════════ -->
+<section class="theme esc" id="esc">
+  <div class="sb">
+    <div class="sb-inner">
+      <p class="sb-num">Theme 01</p>
+      <span class="sb-icon">🎤</span>
+      <h2 class="sb-title">Eurovision<em>Grand Prix</em></h2>
+      <div class="sb-divider"></div>
+      <p class="sb-desc">Our event lands in late May — right after the Eurovision final in Basel. Playful, celebratory, every metric becomes a scoreboard moment.</p>
+      <div class="sb-stickers">
+        <span class="sticker">🎤 microphone</span>
+        <span class="sticker">🌟 star</span>
+        <span class="sticker">🗳️ voting</span>
+        <span class="sticker">🏆 12 points</span>
+        <span class="sticker">💃 stage</span>
+        <span class="sticker">🇺🇦 Ukraine</span>
+        <span class="sticker">🎵 music</span>
+        <span class="sticker">✨ confetti</span>
+      </div>
+      <button class="audio-btn" onclick="playTheme('esc',this)" id="btn-esc">
+        <span>🎤</span><span class="ab-label">Play Eurovision sound</span>
+        <span class="ab-bars"><span></span><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ct">
+    <div class="sh">Key phrases <span class="sh-line"></span></div>
+    <div class="phrase-row"><span class="phrase-tag">Opening</span><div><p class="phrase-q">Welcome to our Team Grand Prix — where every update gets twelve points.</p><p class="phrase-note">Energetic opener for slide 1.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Headcount</span><div><p class="phrase-q">And the votes are in — our headcount reached a new high score this quarter. Like Eurovision, every addition to the scoreboard counts.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Priorities</span><div><p class="phrase-q">Here are our top entries for Q2 — the initiatives competing for your attention and energy this period.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Internal Mobility</span><div><p class="phrase-q">Our Internal Mobility program is the wildcard act — the performance that surprises everyone.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">AMA record</span><div><p class="phrase-q">382 teammates joined our last AMA — Eurovision-level audience turnout. The next one is planned for May.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Closing</span><div><p class="phrase-q">Now it's your turn to vote. Every voice matters — just like in Eurovision.</p></div></div>
+
+    <div class="sh" style="margin-top:48px">Slide wording <span class="sh-line"></span></div>
+    <div class="cards">
+      <div class="card"><p class="card-tag">Operations</p><p class="card-text">"Results are in — here are the numbers from our Q1 scoreboard."</p></div>
+      <div class="card"><p class="card-tag">Stats highlight</p><p class="card-text">"382 joined — Eurovision-level turnout."</p></div>
+      <div class="card"><p class="card-tag">Priorities</p><p class="card-text">"Our top acts for Q2 — the performances we're betting on."</p></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Set expressions <span class="sh-line"></span></div>
+    <div class="idioms">
+      <div class="idiom"><span class="idiom-phrase">Give it twelve points</span><span class="idiom-use">Highlight a top result or achievement</span></div>
+      <div class="idiom"><span class="idiom-phrase">Take the stage</span><span class="idiom-use">Launch an initiative or introduce a speaker</span></div>
+      <div class="idiom"><span class="idiom-phrase">The votes are in</span><span class="idiom-use">Present final numbers or a decision</span></div>
+      <div class="idiom"><span class="idiom-phrase">A standing ovation</span><span class="idiom-use">Celebrate a team or personal win</span></div>
+      <div class="idiom"><span class="idiom-phrase">Raise the curtain on</span><span class="idiom-use">Announce something new</span></div>
+      <div class="idiom"><span class="idiom-phrase">Hit all the right notes</span><span class="idiom-use">Describe a well-executed project</span></div>
+      <div class="idiom"><span class="idiom-phrase">The wildcard entry</span><span class="idiom-use">An unexpected but impressive result</span></div>
+      <div class="idiom"><span class="idiom-phrase">Encore performance</span><span class="idiom-use">Repeating or building on a success</span></div>
+      <div class="idiom"><span class="idiom-phrase">Steal the show</span><span class="idiom-use">An initiative that outperformed expectations</span></div>
+      <div class="idiom"><span class="idiom-phrase">The grand final</span><span class="idiom-use">Close the presentation or a big milestone</span></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Visuals for your slides <span class="sh-line"></span></div>
+    <div class="visuals">
+      <div class="visual"><span class="visual-icon">🎤</span><p class="visual-name">Microphone spotlight</p><p class="visual-hint">Title slide or speaker intro pages</p></div>
+      <div class="visual"><span class="visual-icon">🌟</span><p class="visual-name">Gold star / confetti burst</p><p class="visual-hint">Wins, records, top performers</p></div>
+      <div class="visual"><span class="visual-icon">🗳️</span><p class="visual-name">Scoreboard graphic</p><p class="visual-hint">Headcount or stats slides</p></div>
+      <div class="visual"><span class="visual-icon">🎵</span><p class="visual-name">Sound wave / music notes</p><p class="visual-hint">Section dividers or backgrounds</p></div>
+      <div class="visual"><span class="visual-icon">🏟️</span><p class="visual-name">Arena stage from above</p><p class="visual-hint">Hero image — opening slide</p></div>
+      <div class="visual"><span class="visual-icon">🇺🇦</span><p class="visual-name">Ukrainian flag accent</p><p class="visual-hint">Subtle nod to Ukraine's Eurovision legacy</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════ 02 VYSHYVANKA ════════════════ -->
+<section class="theme vysh" id="vysh">
+  <div class="sb">
+    <div class="sb-inner">
+      <p class="sb-num">Theme 02</p>
+      <span class="sb-icon">🌻</span>
+      <h2 class="sb-title">Vyshyvanka<em>Day of Unity</em></h2>
+      <div class="sb-divider"></div>
+      <p class="sb-desc">The third Thursday of May — a symbol of identity, unity, and heritage. Warm and meaningful, especially now.</p>
+      <div class="sb-stickers">
+        <span class="sticker">🌻 sunflower</span>
+        <span class="sticker">🧵 embroidery</span>
+        <span class="sticker">🤝 unity</span>
+        <span class="sticker">🌿 ornament</span>
+        <span class="sticker">💛💙 colours</span>
+        <span class="sticker">🪡 thread</span>
+        <span class="sticker">🌸 pattern</span>
+      </div>
+      <button class="audio-btn" onclick="playTheme('vysh',this)" id="btn-vysh">
+        <span>🌻</span><span class="ab-label">Play Vyshyvanka sound</span>
+        <span class="ab-bars"><span></span><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ct">
+    <div class="sh">Key phrases <span class="sh-line"></span></div>
+    <div class="phrase-row"><span class="phrase-tag">Opening</span><div><p class="phrase-q">Like every stitch in a vyshyvanka, each one of us contributes to the bigger pattern — welcome to our People Team quarterly update.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Headcount</span><div><p class="phrase-q">Our team is our pattern — each new thread adds colour and strength. This quarter, the fabric grew a little larger.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Priorities</span><div><p class="phrase-q">Every embroidered pattern tells a story. Here's the one we're weaving together this period.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Internal Mobility</span><div><p class="phrase-q">Internal Mobility is about finding your own pattern within the bigger picture — several teammates are already threading new paths.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">AMA record</span><div><p class="phrase-q">382 teammates gathered — proof that the pattern only grows stronger when we come together.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Closing</span><div><p class="phrase-q">Together, we keep adding new colours to the pattern. Thank you for being part of it.</p></div></div>
+
+    <div class="sh" style="margin-top:48px">Slide wording <span class="sh-line"></span></div>
+    <div class="cards">
+      <div class="card"><p class="card-tag">Operations</p><p class="card-text">"Every number is a thread — here's what we wove this quarter."</p></div>
+      <div class="card"><p class="card-tag">Stats highlight</p><p class="card-text">"382 threads joined — the pattern grows stronger."</p></div>
+      <div class="card"><p class="card-tag">Priorities</p><p class="card-text">"The key stitches of Q2 — defining the shape of what's ahead."</p></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Set expressions <span class="sh-line"></span></div>
+    <div class="idioms">
+      <div class="idiom"><span class="idiom-phrase">Cut from the same cloth</span><span class="idiom-use">Shared values across the team</span></div>
+      <div class="idiom"><span class="idiom-phrase">Part of the fabric</span><span class="idiom-use">Someone integral to the team</span></div>
+      <div class="idiom"><span class="idiom-phrase">Woven together</span><span class="idiom-use">Collaboration, cross-team work</span></div>
+      <div class="idiom"><span class="idiom-phrase">Stitch by stitch</span><span class="idiom-use">Gradual, steady progress</span></div>
+      <div class="idiom"><span class="idiom-phrase">The thread that connects us</span><span class="idiom-use">A shared goal or value</span></div>
+      <div class="idiom"><span class="idiom-phrase">Leave a lasting pattern</span><span class="idiom-use">Long-term impact of an initiative</span></div>
+      <div class="idiom"><span class="idiom-phrase">Unravel</span><span class="idiom-use">A challenge or problem that emerged</span></div>
+      <div class="idiom"><span class="idiom-phrase">Tightly knit</span><span class="idiom-use">A cohesive, high-trust team</span></div>
+      <div class="idiom"><span class="idiom-phrase">Add colour to</span><span class="idiom-use">Enrich a process with new ideas</span></div>
+      <div class="idiom"><span class="idiom-phrase">The bigger picture</span><span class="idiom-use">Zoom out to strategy or direction</span></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Visuals for your slides <span class="sh-line"></span></div>
+    <div class="visuals">
+      <div class="visual"><span class="visual-icon">🌻</span><p class="visual-name">Sunflower field</p><p class="visual-hint">Hero image — warmth, identity, home</p></div>
+      <div class="visual"><span class="visual-icon">🧵</span><p class="visual-name">Embroidery close-up</p><p class="visual-hint">Section background or texture overlay</p></div>
+      <div class="visual"><span class="visual-icon">🌿</span><p class="visual-name">Folk ornament pattern</p><p class="visual-hint">Slide borders, dividers, corner accents</p></div>
+      <div class="visual"><span class="visual-icon">💛💙</span><p class="visual-name">Blue & yellow palette</p><p class="visual-hint">Colour scheme for charts and data</p></div>
+      <div class="visual"><span class="visual-icon">🤝</span><p class="visual-name">Hands / people together</p><p class="visual-hint">Team slides, Internal Mobility, AMA</p></div>
+      <div class="visual"><span class="visual-icon">🪡</span><p class="visual-name">Single thread illustration</p><p class="visual-hint">Visual metaphor for journey or timeline</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════ 03 SPACE ════════════════ -->
+<section class="theme spc" id="space">
+  <div class="sb">
+    <div class="sb-inner">
+      <p class="sb-num">Theme 03</p>
+      <span class="sb-icon">🚀</span>
+      <h2 class="sb-title">Mission<em>to the Moon</em></h2>
+      <div class="sb-divider"></div>
+      <p class="sb-desc">Inspired by the recent lunar mission — and our brand, Spaceship. "Shoot for the stars — together."</p>
+      <div class="sb-stickers">
+        <span class="sticker">🚀 rocket</span>
+        <span class="sticker">🌕 moon</span>
+        <span class="sticker">⭐ stars</span>
+        <span class="sticker">🛸 spacecraft</span>
+        <span class="sticker">🌌 galaxy</span>
+        <span class="sticker">🧑‍🚀 crew</span>
+        <span class="sticker">📡 signal</span>
+      </div>
+      <button class="audio-btn" onclick="playTheme('space',this)" id="btn-space">
+        <span>🚀</span><span class="ab-label">Play Mission Moon sound</span>
+        <span class="ab-bars"><span></span><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ct">
+    <div class="sh">Key phrases <span class="sh-line"></span></div>
+    <div class="phrase-row"><span class="phrase-tag">Opening</span><div><p class="phrase-q">Missions don't launch themselves — they need the right crew. Welcome aboard the Spaceship People Team quarterly update. Buckle up.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Headcount</span><div><p class="phrase-q">Every great mission needs a full crew. This quarter, we welcomed new crew members aboard — here's how our headcount looks from orbit.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Priorities</span><div><p class="phrase-q">Mission objectives for Q2: these are the coordinates we're navigating toward. Shoot for the stars — together.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Internal Mobility</span><div><p class="phrase-q">Our Internal Mobility program is our crew rotation system — helping teammates explore new missions without ever leaving the ship.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">AMA record</span><div><p class="phrase-q">382 crew members joined our last transmission — a record-breaking signal. The next AMA is launching in May.</p></div></div>
+    <div class="phrase-row"><span class="phrase-tag">Closing</span><div><p class="phrase-q">The Moon landing reminded the world what's possible when people work together. That's what this team does every day. Shoot for the stars — together.</p></div></div>
+
+    <div class="sh" style="margin-top:48px">Slide wording <span class="sh-line"></span></div>
+    <div class="cards">
+      <div class="card"><p class="card-tag">Operations</p><p class="card-text">"Mission report: numbers from our last orbit around Q1."</p></div>
+      <div class="card"><p class="card-tag">Stats highlight</p><p class="card-text">"382 crew on the line — a record-breaking transmission."</p></div>
+      <div class="card"><p class="card-tag">Priorities</p><p class="card-text">"Flight plan for Q2 — destinations we're locked in on."</p></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Set expressions <span class="sh-line"></span></div>
+    <div class="idioms">
+      <div class="idiom"><span class="idiom-phrase">Houston, do you copy?</span><span class="idiom-use">Check in with the team or confirm alignment</span></div>
+      <div class="idiom"><span class="idiom-phrase">Houston, we have a problem</span><span class="idiom-use">Acknowledge a challenge that needs attention</span></div>
+      <div class="idiom"><span class="idiom-phrase">T-minus [X] and counting</span><span class="idiom-use">Countdown to an event, deadline, or launch</span></div>
+      <div class="idiom"><span class="idiom-phrase">All systems go</span><span class="idiom-use">Everything is ready, green light given</span></div>
+      <div class="idiom"><span class="idiom-phrase">Roger that</span><span class="idiom-use">Confirm receipt of info or a decision</span></div>
+      <div class="idiom"><span class="idiom-phrase">We have liftoff</span><span class="idiom-use">An initiative has officially launched</span></div>
+      <div class="idiom"><span class="idiom-phrase">Shoot for the stars — together</span><span class="idiom-use">Our signature closing line</span></div>
+      <div class="idiom"><span class="idiom-phrase">Navigate uncharted territory</span><span class="idiom-use">Work on something new with no roadmap</span></div>
+      <div class="idiom"><span class="idiom-phrase">Reach escape velocity</span><span class="idiom-use">Break through a barrier or plateau</span></div>
+      <div class="idiom"><span class="idiom-phrase">Mission accomplished</span><span class="idiom-use">Celebrate completing a goal</span></div>
+      <div class="idiom"><span class="idiom-phrase">Full crew aboard</span><span class="idiom-use">Team fully staffed, everyone aligned</span></div>
+      <div class="idiom"><span class="idiom-phrase">Back on the radar</span><span class="idiom-use">Revisit a topic that was put on hold</span></div>
+    </div>
+
+    <div class="sh" style="margin-top:48px">Visuals for your slides <span class="sh-line"></span></div>
+    <div class="visuals">
+      <div class="visual"><span class="visual-icon">🚀</span><p class="visual-name">Rocket launch photo</p><p class="visual-hint">Hero image — opening slide, big announcements</p></div>
+      <div class="visual"><span class="visual-icon">🌕</span><p class="visual-name">Moon surface / earthrise</p><p class="visual-hint">Goals slide — "shoot for the moon"</p></div>
+      <div class="visual"><span class="visual-icon">🧑‍🚀</span><p class="visual-name">Astronaut in space</p><p class="visual-hint">Internal Mobility — exploring new directions</p></div>
+      <div class="visual"><span class="visual-icon">🌌</span><p class="visual-name">Galaxy / star field</p><p class="visual-hint">Dark slide background, closing section</p></div>
+      <div class="visual"><span class="visual-icon">📡</span><p class="visual-name">Mission control screen</p><p class="visual-hint">Operations stats, AMA results</p></div>
+      <div class="visual"><span class="visual-icon">🛸</span><p class="visual-name">Spaceship illustration</p><p class="visual-hint">Brand tie-in — subtle logo nod on any slide</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Mission Control 26.2 · Technology UA People Team</span>
+  <em>3 themes · pick your favourite</em>
+</footer>
+
+<script>
+// Loader
+window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('loader').classList.add('out'),1600)});
+
+// Section heading line reveal
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)}})
+},{threshold:.3});
+document.querySelectorAll('.sh').forEach(el=>io.observe(el));
+
+// Audio
+let AC=null,curStop=null,curBtn=null;
+function getAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC}
+function stopAll(){
+  if(curStop){curStop();curStop=null}
+  if(curBtn){curBtn.classList.remove('playing');curBtn.querySelector('.ab-label').textContent=curBtn.dataset.orig;curBtn=null}
+}
+window.playTheme=function(t,btn){
+  const ctx=getAC();if(ctx.state==='suspended')ctx.resume();
+  if(curBtn===btn){stopAll();return}
+  stopAll();
+  if(!btn.dataset.orig)btn.dataset.orig=btn.querySelector('.ab-label').textContent;
+  btn.querySelector('.ab-label').textContent='Stop ■';
+  btn.classList.add('playing');curBtn=btn;
+  if(t==='esc')playEsc(ctx);
+  if(t==='vysh')playVysh(ctx);
+  if(t==='space')playSpace(ctx);
+};
+function mkRev(ctx,s){
+  const l=ctx.sampleRate*s,b=ctx.createBuffer(2,l,ctx.sampleRate);
+  for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<l;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/l,2.2)}
+  const cv=ctx.createConvolver();cv.buffer=b;return cv;
+}
+function playEsc(ctx){
+  const m=ctx.createGain();m.gain.value=.5;m.connect(ctx.destination);
+  const r=mkRev(ctx,1.2);r.connect(m);
+  const ns=[[523,0],[659,.2],[784,.4],[1047,.6],[784,1],[1047,1.2],[1319,1.7],[1047,2.3],[1175,2.5],[1319,2.7]];
+  const os=[];
+  ns.forEach(([f,t])=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sawtooth';o.frequency.value=f;
+    g.gain.setValueAtTime(0,ctx.currentTime+t);g.gain.linearRampToValueAtTime(.25,ctx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.4);
+    o.connect(g);g.connect(r);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.5);os.push(o);
+  });
+  for(let i=0;i<12;i++){const t=ctx.currentTime+i*.27,k=ctx.createOscillator(),kg=ctx.createGain();k.type='sine';k.frequency.setValueAtTime(140,t);k.frequency.exponentialRampToValueAtTime(40,t+.12);kg.gain.setValueAtTime(.6,t);kg.gain.exponentialRampToValueAtTime(.001,t+.18);k.connect(kg);kg.connect(m);k.start(t);k.stop(t+.2);os.push(k)}
+  curStop=()=>{m.gain.linearRampToValueAtTime(0,ctx.currentTime+.3);os.forEach(o=>{try{o.stop(ctx.currentTime+.35)}catch(e){}})};
+  setTimeout(()=>{if(curBtn===document.getElementById('btn-esc'))stopAll()},3500);
+}
+function playVysh(ctx){
+  const m=ctx.createGain();m.gain.value=.45;m.connect(ctx.destination);
+  const r=mkRev(ctx,2);r.connect(m);
+  const ns=[[294,0,.4],[370,.45,.3],[440,.8,.35],[494,1.2,.25],[587,1.5,.5],[494,2.1,.25],[440,2.4,.3],[370,2.75,.25],[294,3.05,.5],[370,3.6,.3],[440,3.95,.6],[587,4.6,.8]];
+  const os=[];
+  ns.forEach(([f,t,d])=>{
+    const o=ctx.createOscillator(),g=ctx.createGain(),v=ctx.createOscillator(),vg=ctx.createGain();
+    o.type='sine';o.frequency.value=f;v.frequency.value=5.5;vg.gain.value=3;v.connect(vg);vg.connect(o.frequency);
+    g.gain.setValueAtTime(0,ctx.currentTime+t);g.gain.linearRampToValueAtTime(.2,ctx.currentTime+t+.08);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+d);
+    o.connect(g);g.connect(r);v.start(ctx.currentTime+t);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+d+.05);v.stop(ctx.currentTime+t+d+.05);os.push(o,v);
+  });
+  const dr=ctx.createOscillator(),dg=ctx.createGain();dr.type='sine';dr.frequency.value=147;dg.gain.setValueAtTime(0,ctx.currentTime);dg.gain.linearRampToValueAtTime(.1,ctx.currentTime+1);dg.gain.setValueAtTime(.1,ctx.currentTime+4.5);dg.gain.linearRampToValueAtTime(0,ctx.currentTime+5.5);dr.connect(dg);dg.connect(m);dr.start();dr.stop(ctx.currentTime+6);os.push(dr);
+  curStop=()=>{m.gain.linearRampToValueAtTime(0,ctx.currentTime+.5);os.forEach(o=>{try{o.stop(ctx.currentTime+.6)}catch(e){}})};
+  setTimeout(()=>{if(curBtn===document.getElementById('btn-vysh'))stopAll()},5800);
+}
+function playSpace(ctx){
+  const m=ctx.createGain();m.gain.value=.4;m.connect(ctx.destination);
+  const r=mkRev(ctx,3.5);r.connect(m);
+  const dl=ctx.createDelay(1);dl.delayTime.value=.38;const df=ctx.createGain();df.gain.value=.42;dl.connect(df);df.connect(dl);dl.connect(r);
+  const os=[];
+  [[65.4,'sine'],[98,'sine'],[164.8,'triangle'],[130.8,'sine']].forEach(([f,type])=>{
+    const o=ctx.createOscillator(),g=ctx.createGain(),lf=ctx.createOscillator(),lg=ctx.createGain();
+    o.type=type;o.frequency.value=f;lf.frequency.value=.18+Math.random()*.1;lg.gain.value=f*.004;lf.connect(lg);lg.connect(o.frequency);
+    g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(.16,ctx.currentTime+2);g.gain.setValueAtTime(.16,ctx.currentTime+4.5);g.gain.linearRampToValueAtTime(0,ctx.currentTime+6.5);
+    o.connect(g);g.connect(r);lf.start();o.start();o.stop(ctx.currentTime+7);lf.stop(ctx.currentTime+7);os.push(o,lf);
+  });
+  [.5,1.1,1.4,2.2,2.5,2.7,3.4,4,4.5,5].forEach((t,i)=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=880+(i%3)*220;const d=i%3===2?.22:.09;
+    g.gain.setValueAtTime(0,ctx.currentTime+t);g.gain.linearRampToValueAtTime(.14,ctx.currentTime+t+.01);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+d);
+    o.connect(g);g.connect(dl);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+d+.05);os.push(o);
+  });
+  curStop=()=>{m.gain.linearRampToValueAtTime(0,ctx.currentTime+.8);os.forEach(o=>{try{o.stop(ctx.currentTime+.9)}catch(e){}})};
+  setTimeout(()=>{if(curBtn===document.getElementById('btn-space'))stopAll()},7000);
+}
+</script>
+</body>
+</html>
