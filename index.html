@@ -32,7 +32,81 @@ body{
   --ease:cubic-bezier(.16,1,.3,1);
 }
 
-/* ── LOADER ── */
+/* ── CUSTOM CURSOR ── */
+*, *::before, *::after { cursor: none !important; }
+
+.cur {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  top: 0; left: 0;
+}
+
+/* Outer ring */
+.cur-ring {
+  position: absolute;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(24,22,15,.35);
+  transform: translate(-50%, -50%);
+  transition: width .25s ease, height .25s ease, border-color .25s ease, background .25s ease;
+}
+
+/* Inner dot */
+.cur-dot {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #18160f;
+  transform: translate(-50%, -50%);
+  transition: transform .1s ease, background .2s ease;
+}
+
+/* Hover states */
+.cur.hover .cur-ring {
+  width: 52px; height: 52px;
+  border-color: rgba(24,22,15,.18);
+  background: rgba(24,22,15,.04);
+}
+.cur.hover .cur-dot {
+  transform: translate(-50%, -50%) scale(1.6);
+}
+
+/* Click pulse */
+.cur.click .cur-ring {
+  width: 20px; height: 20px;
+  background: rgba(24,22,15,.12);
+  border-color: rgba(24,22,15,.5);
+}
+.cur.click .cur-dot {
+  transform: translate(-50%, -50%) scale(.5);
+}
+
+/* Theme accent colors on hover */
+.esc  *:hover ~ .cur .cur-dot,
+.theme-block.esc:hover  .cur-dot { background: #6b4e18; }
+.vysh *:hover ~ .cur .cur-dot,
+.theme-block.vysh:hover .cur-dot { background: #1a4d34; }
+.spc  *:hover ~ .cur .cur-dot,
+.theme-block.spc:hover  .cur-dot { background: #192b58; }
+
+/* Trail dots */
+.cur-trail {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(24,22,15,.2);
+  transform: translate(-50%,-50%);
+  transition: opacity .4s ease;
+}
+.cur-trail.fade { opacity: 0; }
+
+@media (hover: none) {
+  *, *::before, *::after { cursor: auto !important; }
+  .cur, .cur-trail { display: none; }
+}
 #loader{
   position:fixed;inset:0;z-index:999;
   background:#18160f;
@@ -373,6 +447,11 @@ footer em{font-family:var(--serif);font-style:italic;text-transform:none;letter-
 </head>
 <body>
 
+<div class="cur" id="cur">
+  <div class="cur-ring"></div>
+  <div class="cur-dot"></div>
+</div>
+
 <div id="loader">
   <p class="ld-title">Mission Control 26.2</p>
   <p class="ld-sub">Technology UA People Team</p>
@@ -632,6 +711,74 @@ footer em{font-family:var(--serif);font-style:italic;text-transform:none;letter-
 <script>
 // Loader
 window.addEventListener('load',()=>{setTimeout(()=>document.getElementById('loader').classList.add('out'),1600)});
+
+// ── CUSTOM CURSOR ──
+const cur = document.getElementById('cur');
+let tx = -200, ty = -200, cx = -200, cy = -200;
+let raf;
+
+document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+
+// Smooth follow with lerp
+(function loop() {
+  cx += (tx - cx) * 0.13;
+  cy += (ty - cy) * 0.13;
+  cur.style.left = cx + 'px';
+  cur.style.top  = cy + 'px';
+  requestAnimationFrame(loop);
+})();
+
+// Snap dot instantly
+document.addEventListener('mousemove', e => {
+  cur.querySelector('.cur-dot').style.left = (e.clientX - cx) + 'px';
+  cur.querySelector('.cur-dot').style.top  = (e.clientY - cy) + 'px';
+});
+
+// Hover state
+const hoverEls = 'a, button, .sticker, .card, .idiom, .visual, .tidx a, .phrase-row, .nav-brand';
+document.querySelectorAll(hoverEls.split(',').join(',')).forEach(el => {
+  el.addEventListener('mouseenter', () => cur.classList.add('hover'));
+  el.addEventListener('mouseleave', () => cur.classList.remove('hover'));
+});
+
+// Click pulse
+document.addEventListener('mousedown', () => cur.classList.add('click'));
+document.addEventListener('mouseup',   () => cur.classList.remove('click'));
+
+// Color accent based on section
+document.addEventListener('mousemove', e => {
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el) return;
+  const section = el.closest('.theme');
+  const dot = cur.querySelector('.cur-dot');
+  if (section?.classList.contains('esc'))  dot.style.background = '#c9961a';
+  else if (section?.classList.contains('vysh')) dot.style.background = '#2d8a5a';
+  else if (section?.classList.contains('spc'))  dot.style.background = '#3259b0';
+  else dot.style.background = '#18160f';
+});
+
+// Trail effect
+const trails = [];
+for (let i = 0; i < 6; i++) {
+  const t = document.createElement('div');
+  t.className = 'cur-trail';
+  t.style.opacity = (1 - i * 0.15).toString();
+  t.style.width = t.style.height = (4 - i * 0.4) + 'px';
+  document.body.appendChild(t);
+  trails.push({ el: t, x: -200, y: -200 });
+}
+let trailX = -200, trailY = -200;
+document.addEventListener('mousemove', e => { trailX = e.clientX; trailY = e.clientY; });
+(function trailLoop() {
+  trails.forEach((t, i) => {
+    const prev = i === 0 ? { x: trailX, y: trailY } : trails[i - 1];
+    t.x += (prev.x - t.x) * (0.25 - i * 0.025);
+    t.y += (prev.y - t.y) * (0.25 - i * 0.025);
+    t.el.style.left = t.x + 'px';
+    t.el.style.top  = t.y + 'px';
+  });
+  requestAnimationFrame(trailLoop);
+})();
 
 // Section heading line reveal
 const io=new IntersectionObserver(entries=>{
